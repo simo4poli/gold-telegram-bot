@@ -49,12 +49,3 @@ def home():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
-4. Salva il file
-
-In basso clicca:
-
-Commit changes
-
-Quando l’hai fatto, scrivimi solo:
-
-app.py fatto
