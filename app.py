@@ -33,22 +33,29 @@ def webhook():
 
     signal = data.get("signal", "")
     symbol = data.get("symbol", "")
-    timeframe = data.get("timeframe", "")
-    entry = data.get("entry", "")
-    sl = data.get("sl", "")
-    tp1 = data.get("tp1", "")
-    tp2 = data.get("tp2", "")
+    timeframe_raw = data.get("timeframe", "")
+
+    try:
+        entry = round(float(data.get("entry", 0)), 2)
+        sl = round(float(data.get("sl", 0)), 2)
+        tp1 = round(float(data.get("tp1", 0)), 2)
+        tp2 = round(float(data.get("tp2", 0)), 2)
+    except (TypeError, ValueError):
+        return jsonify({"status": "error", "message": "Prezzi non validi"}), 400
+
+    timeframe = f"M{timeframe_raw}"
 
     message = f"""📊 XAU TREND BOT
 
+📌 Simbolo: {symbol}
 📈 Direzione: {signal}
 ⏱ Timeframe: {timeframe}
 
 💰 Entry: {entry}
 🛑 Stop Loss: {sl}
 
-🎯 Take Profit 1: {tp1}
-🎯 Take Profit 2: {tp2}
+🎯 TP1: {tp1}
+🎯 TP2: {tp2}
 """
 
     send_telegram_message(message)
