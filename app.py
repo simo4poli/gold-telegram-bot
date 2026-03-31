@@ -8,21 +8,22 @@ app = Flask(__name__)
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-
 def send_telegram_message(text: str):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
-        "text": text
+        "text": text,
+        "parse_mode": "Markdown" # Opzionale: rende il testo più bello
     }
-    r = requests.post(url, json=payload, timeout=10)
-    r.raise_for_status()
-
+    try:
+        r = requests.post(url, json=payload, timeout=10)
+        r.raise_for_status()
+    except Exception as e:
+        print(f"Errore invio Telegram: {e}")
 
 @app.route("/", methods=["GET"])
 def home():
     return "XAU TREND BOT is running"
-
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -31,38 +32,32 @@ def webhook():
     if not data:
         return jsonify({"status": "no data"}), 400
 
-    signal = data.get("signal", "")
-    symbol = data.get("symbol", "")
-    timeframe_raw = data.get("timeframe", "")
+    # Estrazione dati (Match perfetto con la tua V5 su TradingView)
+    signal = data.get("signal", "N/A")
+    symbol = data.get("symbol", "XAUUSD")
+    entry = data.get("entry", "0.0")
+    sl = data.get("sl", "0.0")
+    tp = data.get("tp", "0.0")
+    risk = data.get("risk", "1.5%")
 
-    try:
-        entry = round(float(data.get("entry", 0)), 2)
-        sl = round(float(data.get("sl", 0)), 2)
-        tp1 = round(float(data.get("tp1", 0)), 2)
-        tp2 = round(float(data.get("tp2", 0)), 2)
-    except (TypeError, ValueError):
-        return jsonify({"status": "error", "message": "Prezzi non validi"}), 400
+    # Messaggio ottimizzato: 1 solo Target, layout pulito
+    message = f"""📊 *XAU TREND BOT*
 
-    timeframe = f"M{timeframe_raw}"
+📈 *Direzione:* {signal}
+📌 *Simbolo:* {symbol}
 
-    message = f"""📊 XAU TREND BOT
+💰 *Entry:* {entry}
+🛑 *Stop Loss:* {sl}
+🎯 *Target:* {tp}
 
-📌 Simbolo: {symbol}
-📈 Direzione: {signal}
-⏱ Timeframe: {timeframe}
-
-💰 Entry: {entry}
-🛑 Stop Loss: {sl}
-
-🎯 TP1: {tp1}
-🎯 TP2: {tp2}
+⚠️ *Rischio:* {risk}
 """
 
     send_telegram_message(message)
 
     return jsonify({"status": "ok"})
 
-
-# Per Render / produzione
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    # Render usa la porta 10000 di default o quella passata dall'ambiente
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
