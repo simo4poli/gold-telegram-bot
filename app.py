@@ -13,7 +13,7 @@ def send_telegram_message(text: str):
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": text,
-        "parse_mode": "Markdown" # Opzionale: rende il testo più bello
+        "parse_mode": "Markdown"
     }
     try:
         r = requests.post(url, json=payload, timeout=10)
@@ -23,7 +23,7 @@ def send_telegram_message(text: str):
 
 @app.route("/", methods=["GET"])
 def home():
-    return "XAU TREND BOT is running"
+    return "BOT STRATEGY SERVER is running"
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
@@ -32,7 +32,9 @@ def webhook():
     if not data:
         return jsonify({"status": "no data"}), 400
 
-    # Estrazione dati (Match perfetto con la tua V5 su TradingView)
+    # Estrazione dati dinamica
+    # Prende il bot_name da TradingView, se non c'è mette "BOT"
+    bot_name = data.get("bot_name", "🤖 BOT") 
     signal = data.get("signal", "N/A")
     symbol = data.get("symbol", "XAUUSD")
     entry = data.get("entry", "0.0")
@@ -40,8 +42,8 @@ def webhook():
     tp = data.get("tp", "0.0")
     risk = data.get("risk", "1.5%")
 
-    # Messaggio ottimizzato: 1 solo Target, layout pulito
-    message = f"""📊 *XAU TREND BOT*
+    # Messaggio con Nome Bot dinamico
+    message = f"""{bot_name}
 
 📈 *Direzione:* {signal}
 📌 *Simbolo:* {symbol}
@@ -58,6 +60,5 @@ def webhook():
     return jsonify({"status": "ok"})
 
 if __name__ == "__main__":
-    # Render usa la porta 10000 di default o quella passata dall'ambiente
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
